@@ -3,6 +3,7 @@ using CareerConnect.API.Middlewares;
 using CareerConnect.Application.Extensions;
 using CareerConnect.Infrastructure.Extensions;
 using CareerConnect.Infrastructure.Persistence;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -80,6 +81,9 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Hangfire Dashboard (Available at /hangfire)
+app.UseHangfireDashboard();
 
 app.MapControllers();
 

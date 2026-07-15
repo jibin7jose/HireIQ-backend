@@ -34,12 +34,19 @@ namespace CareerConnect.Infrastructure.Migrations
                     b.Property<DateTime>("AppliedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CoverLetter")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("JobId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("ResumeUrl")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("UserProfileId")
                         .HasColumnType("uuid");
@@ -101,6 +108,10 @@ namespace CareerConnect.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("text");
@@ -114,9 +125,8 @@ namespace CareerConnect.Infrastructure.Migrations
                     b.Property<DateTime>("PostedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -146,9 +156,8 @@ namespace CareerConnect.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

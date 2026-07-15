@@ -2,6 +2,9 @@ using CareerConnect.Application.Interfaces;
 using CareerConnect.Infrastructure.Auth;
 using CareerConnect.Infrastructure.Persistence;
 using CareerConnect.Infrastructure.Repositories;
+using CareerConnect.Infrastructure.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +30,17 @@ public static class InfrastructureServiceExtensions
 
         // Services
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IAiScoringService, AiScoringService>();
+        services.AddScoped<IJobScheduler, HangfireJobScheduler>();
+
+        // Hangfire Background Jobs
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"))));
+
+        services.AddHangfireServer();
 
         return services;
     }

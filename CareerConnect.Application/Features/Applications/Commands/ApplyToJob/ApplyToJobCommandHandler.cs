@@ -14,17 +14,20 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
     private readonly IJobRepository _jobRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IJobScheduler _jobScheduler;
 
     public ApplyToJobCommandHandler(
         IApplicationRepository applicationRepository,
         IJobRepository jobRepository,
         IUserRepository userRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IJobScheduler jobScheduler)
     {
         _applicationRepository = applicationRepository;
         _jobRepository         = jobRepository;
         _userRepository        = userRepository;
         _unitOfWork            = unitOfWork;
+        _jobScheduler          = jobScheduler;
     }
 
     public async Task<ApplicationDto> Handle(ApplyToJobCommand request, CancellationToken cancellationToken)
@@ -62,6 +65,9 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
 
         await _applicationRepository.AddAsync(application, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Schedule AI match scoring in background
+        _jobScheduler.ScheduleAiMatchScoring(application.Id);
 
         return new ApplicationDto(
             Id:            application.Id,
