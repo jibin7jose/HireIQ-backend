@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using CareerConnect.Domain.Enums;
 
 namespace CareerConnect.Domain.Entities;
 
@@ -9,10 +8,11 @@ public class Job
     public Guid CompanyId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public string JobType { get; set; } = string.Empty;   // e.g. "Full-Time", "Remote"
     public decimal MinSalary { get; set; }
     public decimal MaxSalary { get; set; }
-    public string Location { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
+    public JobStatus Status { get; set; } = JobStatus.Open;
     public DateTime PostedAt { get; set; }
 
     public Company? Company { get; set; }

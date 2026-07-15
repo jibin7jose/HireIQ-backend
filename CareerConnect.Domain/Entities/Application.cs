@@ -1,4 +1,4 @@
-using System;
+using CareerConnect.Domain.Enums;
 
 namespace CareerConnect.Domain.Entities;
 
@@ -7,7 +7,9 @@ public class Application
     public Guid Id { get; set; }
     public Guid UserProfileId { get; set; }
     public Guid JobId { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public string CoverLetter { get; set; } = string.Empty;
+    public string ResumeUrl { get; set; } = string.Empty;
+    public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
     public int AiMatchScore { get; set; }
     public DateTime AppliedAt { get; set; }
 
