@@ -1,10 +1,11 @@
+using CareerConnect.Application.DTOs;
 using CareerConnect.Application.DTOs.Jobs;
 using CareerConnect.Application.Interfaces;
 using MediatR;
 
 namespace CareerConnect.Application.Features.Jobs.Queries.GetAllJobs;
 
-public sealed class GetAllJobsQueryHandler : IRequestHandler<GetAllJobsQuery, IEnumerable<JobDto>>
+public sealed class GetAllJobsQueryHandler : IRequestHandler<GetAllJobsQuery, PagedResult<JobDto>>
 {
     private readonly IJobRepository _jobRepository;
 
@@ -13,23 +14,20 @@ public sealed class GetAllJobsQueryHandler : IRequestHandler<GetAllJobsQuery, IE
         _jobRepository = jobRepository;
     }
 
-    public async Task<IEnumerable<JobDto>> Handle(GetAllJobsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<JobDto>> Handle(GetAllJobsQuery request, CancellationToken cancellationToken)
     {
-        var jobs = await _jobRepository.GetAllAsync(cancellationToken);
+        var (jobs, totalCount) = await _jobRepository.GetFilteredAsync(
+            request.Keyword,
+            request.Location,
+            request.JobType,
+            request.MinSalary,
+            request.MaxSalary,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken
+        );
 
-        // Client-side filtering (move to IJobRepository.GetFilteredAsync for production)
-        if (!string.IsNullOrWhiteSpace(request.Keyword))
-            jobs = jobs.Where(j =>
-                j.Title.Contains(request.Keyword, StringComparison.OrdinalIgnoreCase) ||
-                j.Description.Contains(request.Keyword, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(request.Location))
-            jobs = jobs.Where(j => j.Location.Contains(request.Location, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(request.JobType))
-            jobs = jobs.Where(j => j.JobType.Equals(request.JobType, StringComparison.OrdinalIgnoreCase));
-
-        return jobs.Select(j => new JobDto(
+        var jobDtos = jobs.Select(j => new JobDto(
             Id:             j.Id,
             CompanyId:      j.CompanyId,
             CompanyName:    j.Company?.Name ?? string.Empty,
@@ -43,5 +41,12 @@ public sealed class GetAllJobsQueryHandler : IRequestHandler<GetAllJobsQuery, IE
             Status:         j.Status.ToString(),
             PostedAt:       j.PostedAt
         ));
+
+        return new PagedResult<JobDto>(
+            Items: jobDtos,
+            TotalCount: totalCount,
+            PageNumber: request.PageNumber,
+            PageSize: request.PageSize
+        );
     }
 }

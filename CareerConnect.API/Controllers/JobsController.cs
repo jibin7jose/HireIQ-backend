@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CareerConnect.Application.DTOs;
 using CareerConnect.Application.DTOs.Jobs;
 using CareerConnect.Application.Features.Jobs.Commands.CreateJob;
 using CareerConnect.Application.Features.Jobs.Commands.DeleteJob;
@@ -22,16 +23,21 @@ public sealed class JobsController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>GET /api/jobs?keyword=&location=&jobType=</summary>
+    /// <summary>GET /api/jobs?keyword=&location=&jobType=&minSalary=&maxSalary=&pageNumber=&pageSize=</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<JobDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<JobDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? keyword,
         [FromQuery] string? location,
         [FromQuery] string? jobType,
-        CancellationToken cancellationToken)
+        [FromQuery] decimal? minSalary,
+        [FromQuery] decimal? maxSalary,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetAllJobsQuery(location, jobType, keyword), cancellationToken);
+        var query = new GetAllJobsQuery(location, jobType, keyword, minSalary, maxSalary, pageNumber, pageSize);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 
