@@ -29,4 +29,7 @@ public sealed class UserRepository : IUserRepository
 
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
         => await _context.Users.AddAsync(user, cancellationToken);
+
+    public void Update(User user)
+        => _context.Users.Update(user);
 }

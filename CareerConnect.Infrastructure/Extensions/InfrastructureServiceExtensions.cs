@@ -32,6 +32,16 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAiScoringService, AiScoringService>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
+        services.AddScoped<IStorageService, SupabaseStorageService>();
+
+        // Supabase Client
+        services.AddSingleton(provider =>
+        {
+            var url = configuration["Supabase:Url"] ?? throw new ArgumentNullException("Supabase:Url is missing");
+            var key = configuration["Supabase:Key"] ?? throw new ArgumentNullException("Supabase:Key is missing");
+            var options = new Supabase.SupabaseOptions { AutoConnectRealtime = false };
+            return new Supabase.Client(url, key, options);
+        });
 
         // Hangfire Background Jobs
         services.AddHangfire(config => config
