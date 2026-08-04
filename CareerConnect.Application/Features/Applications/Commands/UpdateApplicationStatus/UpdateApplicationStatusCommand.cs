@@ -5,5 +5,6 @@ namespace CareerConnect.Application.Features.Applications.Commands.UpdateApplica
 public record UpdateApplicationStatusCommand(
     Guid ApplicationId,
     Guid RequestingUserId,
-    string Status
-) : IRequest<Unit>;
+    string Status) : IRequest<Unit>;
+
+

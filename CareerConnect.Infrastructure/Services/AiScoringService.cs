@@ -9,15 +9,21 @@ public class AiScoringService : IAiScoringService
     private readonly IApplicationRepository _applicationRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AiScoringService> _logger;
+    private readonly IGeminiAiService _geminiAiService;
+    private readonly IJobRepository _jobRepository;
 
     public AiScoringService(
         IApplicationRepository applicationRepository,
         IUnitOfWork unitOfWork,
-        ILogger<AiScoringService> logger)
+        ILogger<AiScoringService> logger,
+        IGeminiAiService geminiAiService,
+        IJobRepository jobRepository)
     {
         _applicationRepository = applicationRepository;
         _unitOfWork            = unitOfWork;
         _logger                = logger;
+        _geminiAiService       = geminiAiService;
+        _jobRepository         = jobRepository;
     }
 
     public async Task CalculateMatchScoreAsync(Guid applicationId, CancellationToken cancellationToken = default)
@@ -31,15 +37,33 @@ public class AiScoringService : IAiScoringService
             return;
         }
 
-        // Simulate AI processing delay
-        await Task.Delay(2000, cancellationToken);
+        var job = await _jobRepository.GetByIdAsync(application.JobId, cancellationToken);
+        var profile = application.UserProfile;
 
-        // Dummy scoring logic: random score between 50 and 100
-        application.AiMatchScore = new Random().Next(50, 101);
+        if (job == null || profile == null)
+        {
+            _logger.LogWarning("Missing Job or Profile for Application {ApplicationId}", applicationId);
+            return;
+        }
 
-        _applicationRepository.Update(application);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            var skills = profile.Skills != null ? string.Join(", ", profile.Skills) : "";
+            var score = await _geminiAiService.CalculateMatchScoreAsync(
+                job.Description,
+                skills,
+                profile.ExperienceSummary ?? "",
+                cancellationToken);
 
-        _logger.LogInformation("Finished AI match scoring for application {ApplicationId}. Score: {Score}", applicationId, application.AiMatchScore);
+            application.AiMatchScore = score;
+            _applicationRepository.Update(application);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Finished AI match scoring for application {ApplicationId}. Score: {Score}", applicationId, application.AiMatchScore);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calculating AI Match Score for application {ApplicationId}", applicationId);
+        }
     }
 }

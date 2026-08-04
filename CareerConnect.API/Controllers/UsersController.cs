@@ -12,10 +12,40 @@ namespace CareerConnect.API.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly CareerConnect.Application.Interfaces.IUserRepository _userRepository;
 
-    public UsersController(IMediator mediator)
+    public UsersController(IMediator mediator, CareerConnect.Application.Interfaces.IUserRepository userRepository)
     {
         _mediator = mediator;
+        _userRepository = userRepository;
+    }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null || user.UserProfile == null) return NotFound();
+
+        return Ok(new 
+        { 
+            user.Email,
+            user.Role,
+            Profile = new 
+            {
+                user.UserProfile.FullName,
+                user.UserProfile.Phone,
+                user.UserProfile.ResumeUrl,
+                user.UserProfile.Skills,
+                user.UserProfile.ExperienceSummary,
+                user.UserProfile.Education
+            }
+        });
     }
 
     [HttpPost("me/resume")]

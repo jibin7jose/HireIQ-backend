@@ -34,6 +34,8 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddScoped<IStorageService, SupabaseStorageService>();
 
+        services.AddHttpClient<IGeminiAiService, GeminiAiService>();
+
         // Supabase Client
         services.AddSingleton(provider =>
         {

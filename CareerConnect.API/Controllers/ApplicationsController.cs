@@ -2,7 +2,8 @@ using System.Security.Claims;
 using CareerConnect.Application.DTOs.Applications;
 using CareerConnect.Application.Features.Applications.Commands.ApplyToJob;
 using CareerConnect.Application.Features.Applications.Commands.UpdateApplicationStatus;
-using CareerConnect.Application.Features.Applications.Queries.GetMyApplications;
+using CareerConnect.Application.Features.Applications.Queries.GetApplicationsForJob;
+using CareerConnect.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,6 @@ namespace CareerConnect.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public sealed class ApplicationsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -21,34 +21,27 @@ public sealed class ApplicationsController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>POST /api/applications — JobSeeker only</summary>
+    /// <summary>POST /api/applications — Candidate only</summary>
     [HttpPost]
-    [Authorize(Roles = "JobSeeker")]
-    [ProducesResponseType(typeof(ApplicationDto), StatusCodes.Status201Created)]
+    [Authorize(Roles = "Candidate")]
+    [ProducesResponseType(typeof(ApplicationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Apply(
-        [FromBody] ApplyRequest request,
-        CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Apply([FromBody] ApplyRequest request, CancellationToken cancellationToken)
     {
-        var command = new ApplyToJobCommand(
-            JobId:       request.JobId,
-            UserId:      GetCurrentUserId(),
-            CoverLetter: request.CoverLetter,
-            ResumeUrl:   request.ResumeUrl
-        );
-
+        var command = new ApplyToJobCommand(request.JobId, GetCurrentUserId(), request.CoverLetter ?? string.Empty, request.ResumeUrl ?? string.Empty);
         var result = await _mediator.Send(command, cancellationToken);
-        return CreatedAtAction(nameof(GetMyApplications), result);
+        return Ok(result);
     }
 
-    /// <summary>GET /api/applications/me — JobSeeker only</summary>
-    [HttpGet("me")]
-    [Authorize(Roles = "JobSeeker")]
-    [ProducesResponseType(typeof(IEnumerable<ApplicationDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetMyApplications(CancellationToken cancellationToken)
+    /// <summary>GET /api/applications/job/{jobId} — Employer only</summary>
+    [HttpGet("job/{jobId:guid}")]
+    [Authorize(Roles = "Employer")]
+    [ProducesResponseType(typeof(List<EmployerApplicationDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetForJob(Guid jobId, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetMyApplicationsQuery(GetCurrentUserId()), cancellationToken);
+        var query = new GetApplicationsForJobQuery(jobId, GetCurrentUserId());
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 
@@ -56,19 +49,9 @@ public sealed class ApplicationsController : ControllerBase
     [HttpPut("{id:guid}/status")]
     [Authorize(Roles = "Employer")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateStatus(
-        Guid id,
-        [FromBody] UpdateApplicationStatusRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateApplicationStatusCommand(
-            ApplicationId:    id,
-            RequestingUserId: GetCurrentUserId(),
-            Status:           request.Status
-        );
-
+        var command = new UpdateApplicationStatusCommand(id, GetCurrentUserId(), request.Status.ToString());
         await _mediator.Send(command, cancellationToken);
         return NoContent();
     }
@@ -80,4 +63,15 @@ public sealed class ApplicationsController : ControllerBase
                ?? throw new UnauthorizedAccessException("User ID not found in token.");
         return Guid.Parse(sub);
     }
+}
+
+public class ApplyJobRequest
+{
+    public Guid JobId { get; set; }
+    public string? CoverLetter { get; set; }
+}
+
+public class UpdateStatusRequest
+{
+    public ApplicationStatus Status { get; set; }
 }
