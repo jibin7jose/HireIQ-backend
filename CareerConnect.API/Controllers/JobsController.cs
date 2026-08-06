@@ -53,7 +53,7 @@ public sealed class JobsController : ControllerBase
 
     /// <summary>GET /api/jobs/recommended — Candidate only</summary>
     [HttpGet("recommended")]
-    [Authorize(Roles = "JobSeeker")]
+    [Authorize(Roles = "Candidate")]
     [ProducesResponseType(typeof(IEnumerable<JobDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRecommended(CancellationToken cancellationToken)
     {
