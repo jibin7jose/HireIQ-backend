@@ -138,4 +138,84 @@ Candidate Experience:
 
         return 50; // default if parsing fails
     }
+
+    public async Task<Dictionary<Guid, int>> BatchCalculateMatchScoresAsync(IEnumerable<CareerConnect.Domain.Entities.Job> jobs, string candidateSkills, string candidateExperience, CancellationToken cancellationToken = default)
+    {
+        var scores = new Dictionary<Guid, int>();
+        if (string.IsNullOrEmpty(_apiKey) || !jobs.Any())
+        {
+            foreach (var job in jobs) scores[job.Id] = 50;
+            return scores;
+        }
+
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={_apiKey}";
+
+        var jobsJson = JsonSerializer.Serialize(jobs.Select(j => new { j.Id, j.Title, j.Description }));
+
+        var prompt = $@"
+You are an expert HR AI assistant evaluating a candidate against a list of job descriptions.
+Calculate a match score from 0 to 100 based on how well the candidate's skills and experience match EACH job's requirements.
+Return ONLY a raw JSON dictionary mapping the Job Id to the integer score, with no formatting or other text. Example: {{""00000000-0000-0000-0000-000000000000"": 85, ...}}
+
+Candidate Skills:
+{candidateSkills}
+
+Candidate Experience:
+{candidateExperience}
+
+Jobs:
+{jobsJson}
+";
+
+        var requestBody = new
+        {
+            contents = new[] { new { parts = new[] { new { text = prompt } } } },
+            generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
+        };
+
+        var response = await _httpClient.PostAsJsonAsync(url, requestBody, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            foreach (var job in jobs) scores[job.Id] = 50;
+            return scores;
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        
+        try
+        {
+            using var document = JsonDocument.Parse(responseContent);
+            var root = document.RootElement;
+            
+            if (root.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0)
+            {
+                var firstCandidate = candidates[0];
+                if (firstCandidate.TryGetProperty("content", out var content) && 
+                    content.TryGetProperty("parts", out var parts) && 
+                    parts.GetArrayLength() > 0)
+                {
+                    var text = parts[0].GetProperty("text").GetString()?.Trim();
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        var parsedScores = JsonSerializer.Deserialize<Dictionary<Guid, int>>(text);
+                        if (parsedScores != null)
+                        {
+                            foreach (var job in jobs)
+                            {
+                                scores[job.Id] = parsedScores.TryGetValue(job.Id, out var score) ? Math.Clamp(score, 0, 100) : 50;
+                            }
+                            return scores;
+                        }
+                    }
+                }
+            }
+        }
+        catch 
+        {
+            // fallback below
+        }
+
+        foreach (var job in jobs) scores[job.Id] = 50;
+        return scores;
+    }
 }

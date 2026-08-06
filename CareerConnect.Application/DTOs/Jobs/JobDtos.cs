@@ -14,7 +14,8 @@ public record JobDto(
     decimal MinSalary,
     decimal MaxSalary,
     string Status,
-    DateTime PostedAt
+    DateTime PostedAt,
+    int? AiMatchScore = null
 );
 
 public record CreateJobRequest(

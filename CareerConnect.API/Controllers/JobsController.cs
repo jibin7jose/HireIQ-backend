@@ -51,6 +51,16 @@ public sealed class JobsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>GET /api/jobs/recommended — Candidate only</summary>
+    [HttpGet("recommended")]
+    [Authorize(Roles = "JobSeeker")]
+    [ProducesResponseType(typeof(IEnumerable<JobDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRecommended(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new CareerConnect.Application.Features.Jobs.Queries.GetRecommendedJobs.GetRecommendedJobsQuery(GetCurrentUserId()), cancellationToken);
+        return Ok(result);
+    }
+
     /// <summary>POST /api/jobs — Employer only</summary>
     [HttpPost]
     [Authorize(Roles = "Employer")]
