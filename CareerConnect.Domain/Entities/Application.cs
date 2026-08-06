@@ -15,4 +15,5 @@ public class Application
 
     public UserProfile? UserProfile { get; set; }
     public Job? Job { get; set; }
+    public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
 }

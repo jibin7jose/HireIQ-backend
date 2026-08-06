@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Job> Jobs => Set<Job>();
     public DbSet<JobApplication> Applications => Set<JobApplication>();
+    public DbSet<Interview> Interviews => Set<Interview>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,13 @@ public class ApplicationDbContext : DbContext
             .HasMany(j => j.Applications)
             .WithOne(a => a.Job)
             .HasForeignKey(a => a.JobId);
+
+        // Configure Application -> Interview (1-to-many)
+        modelBuilder.Entity<Interview>()
+            .HasOne(i => i.Application)
+            .WithMany(a => a.Interviews)
+            .HasForeignKey(i => i.ApplicationId)
+            .OnDelete(DeleteBehavior.Cascade);
             
         // Configure AdminUser for Company
         modelBuilder.Entity<Company>()
