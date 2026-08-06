@@ -38,9 +38,9 @@ public sealed class ApplicationsController : ControllerBase
     [HttpGet("job/{jobId:guid}")]
     [Authorize(Roles = "Employer")]
     [ProducesResponseType(typeof(List<EmployerApplicationDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetForJob(Guid jobId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetForJob(Guid jobId, [FromQuery] ApplicationStatus? statusFilter, CancellationToken cancellationToken)
     {
-        var query = new GetApplicationsForJobQuery(jobId, GetCurrentUserId());
+        var query = new GetApplicationsForJobQuery(jobId, GetCurrentUserId(), statusFilter);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

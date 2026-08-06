@@ -4,9 +4,11 @@ using CareerConnect.Domain.Entities;
 using CareerConnect.Domain.Exceptions;
 using MediatR;
 
+using CareerConnect.Domain.Enums;
+
 namespace CareerConnect.Application.Features.Applications.Queries.GetApplicationsForJob;
 
-public record GetApplicationsForJobQuery(Guid JobId, Guid RequestingCompanyId) : IRequest<List<EmployerApplicationDto>>;
+public record GetApplicationsForJobQuery(Guid JobId, Guid RequestingCompanyId, ApplicationStatus? StatusFilter = null) : IRequest<List<EmployerApplicationDto>>;
 
 public class GetApplicationsForJobQueryHandler : IRequestHandler<GetApplicationsForJobQuery, List<EmployerApplicationDto>>
 {
@@ -32,6 +34,11 @@ public class GetApplicationsForJobQueryHandler : IRequestHandler<GetApplications
         }
 
         var applications = await _applicationRepository.GetByJobIdAsync(request.JobId, cancellationToken);
+        
+        if (request.StatusFilter.HasValue)
+        {
+            applications = applications.Where(a => a.Status == request.StatusFilter.Value).ToList();
+        }
 
         return applications.Select(a => new EmployerApplicationDto
         {

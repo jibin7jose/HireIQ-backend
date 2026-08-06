@@ -2,6 +2,9 @@ using System.Security.Claims;
 using CareerConnect.Application.DTOs.Companies;
 using CareerConnect.Application.Features.Companies.Commands.CreateCompany;
 using CareerConnect.Application.Features.Companies.Queries.GetCompanyById;
+using CareerConnect.Application.Features.Companies.Queries.GetAllCompanies;
+using CareerConnect.Application.Features.Companies.Queries.GetEmployerStats;
+using CareerConnect.Application.Features.Companies.Commands.ApproveCompany;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +29,38 @@ public sealed class CompaniesController : ControllerBase
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetCompanyByIdQuery(id), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>GET /api/companies — Admin only</summary>
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(IEnumerable<CompanyDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetAllCompaniesQuery(), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>POST /api/companies/{id}/approve — Admin only</summary>
+    [HttpPost("{id:guid}/approve")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Approve(Guid id, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new ApproveCompanyCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>GET /api/companies/stats — Employer only</summary>
+    [HttpGet("stats")]
+    [Authorize(Roles = "Employer")]
+    [ProducesResponseType(typeof(EmployerStatsDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _mediator.Send(new GetEmployerStatsQuery(userId), cancellationToken);
         return Ok(result);
     }
 

@@ -24,6 +24,11 @@ public sealed class CompanyRepository : ICompanyRepository
             .Include(c => c.Jobs)
             .FirstOrDefaultAsync(c => c.AdminUserId == adminUserId, cancellationToken);
 
+    public async Task<IEnumerable<Company>> GetAllAsync(CancellationToken cancellationToken = default)
+        => await _context.Companies
+            .Include(c => c.Jobs)
+            .ToListAsync(cancellationToken);
+
     public async Task AddAsync(Company company, CancellationToken cancellationToken = default)
         => await _context.Companies.AddAsync(company, cancellationToken);
 

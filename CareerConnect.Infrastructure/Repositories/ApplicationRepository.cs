@@ -39,6 +39,12 @@ public sealed class ApplicationRepository : IApplicationRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+    public async Task<int> GetTotalApplicantsByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default)
+        => await _context.Applications
+            .Include(a => a.Job)
+            .Where(a => a.Job != null && a.Job.CompanyId == companyId)
+            .CountAsync(cancellationToken);
+
     public async Task<bool> ExistsAsync(Guid userProfileId, Guid jobId, CancellationToken cancellationToken = default)
         => await _context.Applications
             .AnyAsync(a => a.UserProfileId == userProfileId && a.JobId == jobId, cancellationToken);

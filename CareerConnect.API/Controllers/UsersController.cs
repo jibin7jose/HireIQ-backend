@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using CareerConnect.Application.Features.Users.Commands.UploadResume;
+using CareerConnect.Application.Features.Users.Queries.GetAllUsers;
+using CareerConnect.Application.DTOs.Users;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +20,15 @@ public class UsersController : ControllerBase
     {
         _mediator = mediator;
         _userRepository = userRepository;
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetAllUsersQuery(), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("me")]
