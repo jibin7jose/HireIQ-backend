@@ -15,19 +15,21 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJobScheduler _jobScheduler;
-
+    private readonly IEmailService _emailService;
     public ApplyToJobCommandHandler(
         IApplicationRepository applicationRepository,
         IJobRepository jobRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        IJobScheduler jobScheduler)
+        IJobScheduler jobScheduler,
+        IEmailService emailService)
     {
         _applicationRepository = applicationRepository;
         _jobRepository         = jobRepository;
         _userRepository        = userRepository;
         _unitOfWork            = unitOfWork;
         _jobScheduler          = jobScheduler;
+        _emailService          = emailService;
     }
 
     public async Task<ApplicationDto> Handle(ApplyToJobCommand request, CancellationToken cancellationToken)
@@ -68,6 +70,22 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
 
         // Schedule AI match scoring in background
         _jobScheduler.ScheduleAiMatchScoring(application.Id);
+
+        // Send Email Notification to Employer
+        if (job.Company != null)
+        {
+            var employer = await _userRepository.GetByIdAsync(job.Company.AdminUserId, cancellationToken);
+            if (employer != null)
+            {
+                var subject = $"New Application Received for {job.Title}";
+                var body = $@"
+                    <h2>New Application!</h2>
+                    <p><strong>{profile.FullName}</strong> has just applied for your open position: <strong>{job.Title}</strong>.</p>
+                    <p>Log in to your employer dashboard to review their resume and AI Match Score.</p>
+                ";
+                await _emailService.SendEmailAsync(employer.Email, subject, body, cancellationToken);
+            }
+        }
 
         return new ApplicationDto(
             Id:            application.Id,

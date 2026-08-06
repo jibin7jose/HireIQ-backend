@@ -33,6 +33,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IAiScoringService, AiScoringService>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddScoped<IStorageService, SupabaseStorageService>();
+        services.AddScoped<IEmailService, EmailService>();
 
         services.AddHttpClient<IGeminiAiService, GeminiAiService>();
 

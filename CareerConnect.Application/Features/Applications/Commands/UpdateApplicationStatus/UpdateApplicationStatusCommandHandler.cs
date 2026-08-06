@@ -11,16 +11,22 @@ public sealed class UpdateApplicationStatusCommandHandler
 {
     private readonly IApplicationRepository _applicationRepository;
     private readonly ICompanyRepository _companyRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
 
     public UpdateApplicationStatusCommandHandler(
         IApplicationRepository applicationRepository,
         ICompanyRepository companyRepository,
-        IUnitOfWork unitOfWork)
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        IEmailService emailService)
     {
         _applicationRepository = applicationRepository;
         _companyRepository     = companyRepository;
+        _userRepository        = userRepository;
         _unitOfWork            = unitOfWork;
+        _emailService          = emailService;
     }
 
     public async Task<Unit> Handle(UpdateApplicationStatusCommand request, CancellationToken cancellationToken)
@@ -41,6 +47,27 @@ public sealed class UpdateApplicationStatusCommandHandler
         application.Status = newStatus;
         _applicationRepository.Update(application);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send Email Notification to Candidate
+        if (application.UserProfile != null)
+        {
+            var candidate = await _userRepository.GetByIdAsync(application.UserProfile.UserId, cancellationToken);
+            if (candidate != null)
+            {
+                var jobTitle = application.Job?.Title ?? "a job";
+                var companyName = application.Job?.Company?.Name ?? "the employer";
+                
+                var subject = $"Application Status Update: {jobTitle}";
+                var body = $@"
+                    <h2>Your application status has been updated!</h2>
+                    <p>Hi {application.UserProfile.FullName},</p>
+                    <p><strong>{companyName}</strong> has updated the status of your application for <strong>{jobTitle}</strong>.</p>
+                    <p>Your new status is: <strong>{newStatus.ToString()}</strong>.</p>
+                    <p>Log in to your candidate dashboard to view more details.</p>
+                ";
+                await _emailService.SendEmailAsync(candidate.Email, subject, body, cancellationToken);
+            }
+        }
 
         return Unit.Value;
     }
