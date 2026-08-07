@@ -12,6 +12,8 @@ public class Job
     public string JobType { get; set; } = string.Empty;   // e.g. "Full-Time", "Remote"
     public decimal MinSalary { get; set; }
     public decimal MaxSalary { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public JobStatus Status { get; set; } = JobStatus.Open;
     public DateTime PostedAt { get; set; }
 

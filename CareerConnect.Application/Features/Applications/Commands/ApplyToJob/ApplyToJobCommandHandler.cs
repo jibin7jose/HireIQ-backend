@@ -102,7 +102,9 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
             ResumeUrl:     application.ResumeUrl,
             Status:        application.Status.ToString(),
             AiMatchScore:  application.AiMatchScore,
-            AppliedAt:     application.AppliedAt
+            AppliedAt:     application.AppliedAt,
+            MeetingLink:   null,
+            InterviewDate: null
         );
     }
 }

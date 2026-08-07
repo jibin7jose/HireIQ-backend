@@ -39,7 +39,9 @@ public sealed class GetAllJobsQueryHandler : IRequestHandler<GetAllJobsQuery, Pa
             MinSalary:      j.MinSalary,
             MaxSalary:      j.MaxSalary,
             Status:         j.Status.ToString(),
-            PostedAt:       j.PostedAt
+            PostedAt:       j.PostedAt,
+            Latitude:       j.Latitude,
+            Longitude:      j.Longitude
         ));
 
         return new PagedResult<JobDto>(

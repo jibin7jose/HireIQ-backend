@@ -15,6 +15,8 @@ public record JobDto(
     decimal MaxSalary,
     string Status,
     DateTime PostedAt,
+    double? Latitude = null,
+    double? Longitude = null,
     int? AiMatchScore = null
 );
 

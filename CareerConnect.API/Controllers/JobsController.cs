@@ -61,6 +61,16 @@ public sealed class JobsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>GET /api/jobs/discover — Candidate only</summary>
+    [HttpGet("discover")]
+    [Authorize(Roles = "Candidate")]
+    [ProducesResponseType(typeof(IEnumerable<JobDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDiscoverable(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new CareerConnect.Application.Features.Jobs.Queries.GetDiscoverableJobs.GetDiscoverableJobsQuery(GetCurrentUserId()), cancellationToken);
+        return Ok(result);
+    }
+
     /// <summary>GET /api/jobs/{id}/recommended-candidates — Employer only</summary>
     [HttpGet("{id:guid}/recommended-candidates")]
     [Authorize(Roles = "Employer")]

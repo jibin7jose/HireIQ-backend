@@ -32,7 +32,9 @@ public sealed class GetJobByIdQueryHandler : IRequestHandler<GetJobByIdQuery, Jo
             MinSalary:      job.MinSalary,
             MaxSalary:      job.MaxSalary,
             Status:         job.Status.ToString(),
-            PostedAt:       job.PostedAt
+            PostedAt:       job.PostedAt,
+            Latitude:       job.Latitude,
+            Longitude:      job.Longitude
         );
     }
 }

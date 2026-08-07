@@ -40,6 +40,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<INotificationService, SignalRNotificationService>();
 
         services.AddHttpClient<IGeminiAiService, GeminiAiService>();
+        services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();
 
         // Supabase Client
         services.AddSingleton(provider =>

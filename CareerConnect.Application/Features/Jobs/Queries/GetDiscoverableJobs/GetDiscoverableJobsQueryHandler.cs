@@ -6,34 +6,41 @@ using CareerConnect.Domain.Exceptions;
 using MediatR;
 using System.Linq;
 
-namespace CareerConnect.Application.Features.Jobs.Queries.GetRecommendedJobs;
+namespace CareerConnect.Application.Features.Jobs.Queries.GetDiscoverableJobs;
 
-public class GetRecommendedJobsQueryHandler : IRequestHandler<GetRecommendedJobsQuery, IEnumerable<JobDto>>
+public class GetDiscoverableJobsQueryHandler : IRequestHandler<GetDiscoverableJobsQuery, IEnumerable<JobDto>>
 {
     private readonly IJobRepository _jobRepository;
     private readonly IUserRepository _userRepository;
     private readonly IGeminiAiService _geminiAiService;
+    private readonly IApplicationRepository _applicationRepository;
 
-    public GetRecommendedJobsQueryHandler(
+    public GetDiscoverableJobsQueryHandler(
         IJobRepository jobRepository,
         IUserRepository userRepository,
-        IGeminiAiService geminiAiService)
+        IGeminiAiService geminiAiService,
+        IApplicationRepository applicationRepository)
     {
         _jobRepository = jobRepository;
         _userRepository = userRepository;
         _geminiAiService = geminiAiService;
+        _applicationRepository = applicationRepository;
     }
 
-    public async Task<IEnumerable<JobDto>> Handle(GetRecommendedJobsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<JobDto>> Handle(GetDiscoverableJobsQuery request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
         var allJobs = await _jobRepository.GetAllAsync(cancellationToken);
         
-        // Filter active jobs, taking the 20 most recent to avoid overwhelming AI or hitting timeouts
+        // Get all applications by this user
+        var applications = await _applicationRepository.GetByCandidateIdAsync(request.UserId, cancellationToken);
+        var appliedJobIds = applications.Select(a => a.JobId).ToHashSet();
+        
+        // Filter active jobs, taking 20 that the user has not applied to yet
         var activeJobs = allJobs
-            .Where(j => j.Status == JobStatus.Open)
+            .Where(j => j.Status == JobStatus.Open && !appliedJobIds.Contains(j.Id))
             .OrderByDescending(j => j.PostedAt)
             .Take(20)
             .ToList();
@@ -45,7 +52,7 @@ public class GetRecommendedJobsQueryHandler : IRequestHandler<GetRecommendedJobs
 
         var profile = user.UserProfile;
         
-        // If the user hasn't uploaded a resume/has no skills, just return the recent jobs without AI score
+        // If the user hasn't uploaded a resume/has no skills, just return without AI score
         if (profile == null || profile.Skills == null || !profile.Skills.Any())
         {
             return activeJobs.Select(j => MapToDto(j, null)).ToList();
@@ -58,13 +65,12 @@ public class GetRecommendedJobsQueryHandler : IRequestHandler<GetRecommendedJobs
         var scores = await _geminiAiService.BatchCalculateMatchScoresAsync(activeJobs, skillsStr, expStr, cancellationToken);
 
         // Map to DTO, inject the score, and sort by highest score first
-        var recommendedJobs = activeJobs
+        var discoverableJobs = activeJobs
             .Select(j => MapToDto(j, scores.TryGetValue(j.Id, out var s) ? s : 50))
             .OrderByDescending(j => j.AiMatchScore)
-            .Take(5) // Only return the top 5 best matches to the frontend dashboard
             .ToList();
 
-        return recommendedJobs;
+        return discoverableJobs;
     }
 
     private static JobDto MapToDto(Job job, int? aiMatchScore)

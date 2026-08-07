@@ -36,8 +36,11 @@ public class JobMatchingService : IJobMatchingService
         _logger.LogInformation("Starting daily job alerts matching process...");
 
         // 1. Get jobs posted in the last 24 hours
-        var recentJobs = await _jobRepository.GetAllAsync(cancellationToken);
-        recentJobs = recentJobs.Where(j => j.Status == JobStatus.Open && j.CreatedAt >= DateTime.UtcNow.AddDays(-1)).ToList();
+        var newJobs = await _jobRepository.GetFilteredAsync(
+            "", "", "", null, null, 1, 50, cancellationToken);
+
+        // Filter for jobs posted in the last 24 hours
+        var recentJobs = newJobs.Jobs.Where(j => j.PostedAt >= DateTime.UtcNow.AddDays(-1)).ToList();
 
         if (!recentJobs.Any())
         {
