@@ -9,7 +9,8 @@ namespace CareerConnect.Application.Features.Users.Commands.UpdateProfile;
 
 public record UpdateProfileCommand(
     Guid UserId,
-    bool ReceiveJobAlerts
+    bool ReceiveJobAlerts,
+    string? WalletAddress = null
 ) : IRequest;
 
 public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand>
@@ -32,6 +33,11 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand>
             throw new DomainException("User profile not found.");
 
         user.UserProfile.ReceiveJobAlerts = request.ReceiveJobAlerts;
+        
+        if (request.WalletAddress != null)
+        {
+            user.UserProfile.WalletAddress = request.WalletAddress;
+        }
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

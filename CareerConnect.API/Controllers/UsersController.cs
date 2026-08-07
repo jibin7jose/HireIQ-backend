@@ -55,12 +55,13 @@ public class UsersController : ControllerBase
                 user.UserProfile.Skills,
                 user.UserProfile.ExperienceSummary,
                 user.UserProfile.Education,
-                user.UserProfile.ReceiveJobAlerts
+                user.UserProfile.ReceiveJobAlerts,
+                user.UserProfile.WalletAddress
             }
         });
     }
 
-    public record UpdateProfileRequest(bool ReceiveJobAlerts);
+    public record UpdateProfileRequest(bool ReceiveJobAlerts, string? WalletAddress = null);
 
     [HttpPut("me/profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
@@ -69,7 +70,7 @@ public class UsersController : ControllerBase
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return Unauthorized();
 
-        var command = new CareerConnect.Application.Features.Users.Commands.UpdateProfile.UpdateProfileCommand(userId, request.ReceiveJobAlerts);
+        var command = new CareerConnect.Application.Features.Users.Commands.UpdateProfile.UpdateProfileCommand(userId, request.ReceiveJobAlerts, request.WalletAddress);
         await _mediator.Send(command);
         return NoContent();
     }

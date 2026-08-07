@@ -12,6 +12,7 @@ public class UserProfile
     public string AvatarUrl { get; set; } = string.Empty;
     public string ResumeUrl { get; set; } = string.Empty;
     public bool ReceiveJobAlerts { get; set; } = true;
+    public string? WalletAddress { get; set; }
     
     // AI Parsed Fields
     public List<string> Skills { get; set; } = new List<string>();
