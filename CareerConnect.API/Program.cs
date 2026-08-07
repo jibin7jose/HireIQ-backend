@@ -89,6 +89,10 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
+    
+    // Register recurring Hangfire jobs
+    var jobScheduler = scope.ServiceProvider.GetRequiredService<CareerConnect.Application.Interfaces.IJobScheduler>();
+    jobScheduler.ScheduleDailyJobAlerts();
 }
 
 // Global exception handler (must be first)

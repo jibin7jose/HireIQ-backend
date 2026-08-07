@@ -54,9 +54,24 @@ public class UsersController : ControllerBase
                 user.UserProfile.ResumeUrl,
                 user.UserProfile.Skills,
                 user.UserProfile.ExperienceSummary,
-                user.UserProfile.Education
+                user.UserProfile.Education,
+                user.UserProfile.ReceiveJobAlerts
             }
         });
+    }
+
+    public record UpdateProfileRequest(bool ReceiveJobAlerts);
+
+    [HttpPut("me/profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+
+        var command = new CareerConnect.Application.Features.Users.Commands.UpdateProfile.UpdateProfileCommand(userId, request.ReceiveJobAlerts);
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpPost("me/resume")]

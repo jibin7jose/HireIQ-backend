@@ -33,6 +33,7 @@ public static class InfrastructureServiceExtensions
         // Services
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAiScoringService, AiScoringService>();
+        services.AddScoped<IJobMatchingService, JobMatchingService>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddScoped<IStorageService, SupabaseStorageService>();
         services.AddScoped<IEmailService, EmailService>();
