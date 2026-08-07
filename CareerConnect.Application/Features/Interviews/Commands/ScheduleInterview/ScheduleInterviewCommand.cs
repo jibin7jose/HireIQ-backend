@@ -56,7 +56,7 @@ public class ScheduleInterviewCommandHandler : IRequestHandler<ScheduleInterview
             throw new UnauthorizedException("You can only schedule interviews for your own jobs.");
 
         var interviewId = Guid.NewGuid();
-        var meetingLink = $"https://meet.hireiq.app/{interviewId}";
+        var meetingLink = $"/interviews/{interviewId}";
 
         var interview = new Interview
         {

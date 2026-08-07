@@ -53,7 +53,9 @@ public class GetApplicationsForJobQueryHandler : IRequestHandler<GetApplications
             ResumeUrl = a.ResumeUrl,
             Status = a.Status,
             AiMatchScore = a.AiMatchScore,
-            AppliedAt = a.AppliedAt
+            AppliedAt = a.AppliedAt,
+            MeetingLink = a.Interviews.OrderByDescending(i => i.ScheduledAt).FirstOrDefault()?.MeetingLink,
+            InterviewDate = a.Interviews.OrderByDescending(i => i.ScheduledAt).FirstOrDefault()?.ScheduledAt
         }).OrderByDescending(a => a.AiMatchScore).ToList();
     }
 }

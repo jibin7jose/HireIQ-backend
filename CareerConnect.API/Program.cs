@@ -54,7 +54,8 @@ builder.Services.AddAuthentication(options =>
         {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+            if (!string.IsNullOrEmpty(accessToken) && 
+                (path.StartsWithSegments("/hubs/notifications") || path.StartsWithSegments("/hubs/video")))
             {
                 context.Token = accessToken;
             }
@@ -109,6 +110,7 @@ app.UseHangfireDashboard();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<VideoInterviewHub>("/hubs/video");
 
 // Health check endpoint
 app.MapGet("/health", async (ApplicationDbContext db) =>

@@ -20,6 +20,8 @@ public class CandidateApplicationDto
     public string CompanyName { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime AppliedAt { get; set; }
+    public string? MeetingLink { get; set; }
+    public DateTime? InterviewDate { get; set; }
 }
 
 public class GetCandidateApplicationsQueryHandler : IRequestHandler<GetCandidateApplicationsQuery, IEnumerable<CandidateApplicationDto>>
@@ -52,7 +54,9 @@ public class GetCandidateApplicationsQueryHandler : IRequestHandler<GetCandidate
             JobTitle = a.Job?.Title ?? string.Empty,
             CompanyName = a.Job?.Company?.Name ?? string.Empty,
             Status = a.Status.ToString(),
-            AppliedAt = a.AppliedAt
+            AppliedAt = a.AppliedAt,
+            MeetingLink = a.Interviews.OrderByDescending(i => i.ScheduledAt).FirstOrDefault()?.MeetingLink,
+            InterviewDate = a.Interviews.OrderByDescending(i => i.ScheduledAt).FirstOrDefault()?.ScheduledAt
         });
     }
 }

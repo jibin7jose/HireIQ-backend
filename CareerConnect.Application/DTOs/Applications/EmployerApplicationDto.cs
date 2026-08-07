@@ -16,4 +16,8 @@ public class EmployerApplicationDto
     public ApplicationStatus Status { get; set; }
     public int AiMatchScore { get; set; }
     public DateTime AppliedAt { get; set; }
+    
+    // Interview info
+    public string? MeetingLink { get; set; }
+    public DateTime? InterviewDate { get; set; }
 }

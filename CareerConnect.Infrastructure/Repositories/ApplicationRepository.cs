@@ -27,6 +27,8 @@ public sealed class ApplicationRepository : IApplicationRepository
     public async Task<IEnumerable<JobApplication>> GetByJobIdAsync(Guid jobId, CancellationToken cancellationToken = default)
         => await _context.Applications
             .Include(a => a.UserProfile)
+                .ThenInclude(up => up!.User)
+            .Include(a => a.Interviews)
             .Where(a => a.JobId == jobId)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -35,6 +37,7 @@ public sealed class ApplicationRepository : IApplicationRepository
         => await _context.Applications
             .Include(a => a.Job)
                 .ThenInclude(j => j!.Company)
+            .Include(a => a.Interviews)
             .Where(a => a.UserProfileId == userProfileId)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -54,6 +57,7 @@ public sealed class ApplicationRepository : IApplicationRepository
         return await _context.Applications
             .Include(a => a.Job)
             .ThenInclude(j => j!.Company)
+            .Include(a => a.Interviews)
             .Where(a => a.UserProfileId == userProfileId)
             .OrderByDescending(a => a.AppliedAt)
             .ToListAsync(cancellationToken);

@@ -10,7 +10,9 @@ public record ApplicationDto(
     string ResumeUrl,
     string Status,
     int AiMatchScore,
-    DateTime AppliedAt
+    DateTime AppliedAt,
+    string? MeetingLink,
+    DateTime? InterviewDate
 );
 
 public record ApplyRequest(

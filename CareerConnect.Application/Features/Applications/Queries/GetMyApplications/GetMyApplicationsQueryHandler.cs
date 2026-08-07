@@ -41,7 +41,9 @@ public sealed class GetMyApplicationsQueryHandler
             ResumeUrl:     a.ResumeUrl,
             Status:        a.Status.ToString(),
             AiMatchScore:  a.AiMatchScore,
-            AppliedAt:     a.AppliedAt
+            AppliedAt:     a.AppliedAt,
+            MeetingLink:   a.Interviews.OrderByDescending(i => i.ScheduledAt).FirstOrDefault()?.MeetingLink,
+            InterviewDate: a.Interviews.OrderByDescending(i => i.ScheduledAt).FirstOrDefault()?.ScheduledAt
         ));
     }
 }
