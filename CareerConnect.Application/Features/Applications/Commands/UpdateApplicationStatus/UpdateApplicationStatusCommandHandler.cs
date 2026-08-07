@@ -14,19 +14,22 @@ public sealed class UpdateApplicationStatusCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     public UpdateApplicationStatusCommandHandler(
         IApplicationRepository applicationRepository,
         ICompanyRepository companyRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        IEmailService emailService)
+        IEmailService emailService,
+        INotificationService notificationService)
     {
         _applicationRepository = applicationRepository;
         _companyRepository     = companyRepository;
         _userRepository        = userRepository;
         _unitOfWork            = unitOfWork;
         _emailService          = emailService;
+        _notificationService   = notificationService;
     }
 
     public async Task<Unit> Handle(UpdateApplicationStatusCommand request, CancellationToken cancellationToken)
@@ -66,6 +69,8 @@ public sealed class UpdateApplicationStatusCommandHandler
                     <p>Log in to your candidate dashboard to view more details.</p>
                 ";
                 await _emailService.SendEmailAsync(candidate.Email, subject, body, cancellationToken);
+                
+                await _notificationService.SendNotificationAsync(candidate.Id.ToString(), $"Your application for {jobTitle} at {companyName} is now: {newStatus}", "Info");
             }
         }
 

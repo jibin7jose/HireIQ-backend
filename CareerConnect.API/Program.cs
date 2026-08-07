@@ -1,4 +1,5 @@
 using System.Text;
+using CareerConnect.Infrastructure.Hubs;
 using CareerConnect.API.Middlewares;
 using CareerConnect.Application.Extensions;
 using CareerConnect.Infrastructure.Extensions;
@@ -16,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
 
 // Application layer (MediatR + FluentValidation + Pipeline Behaviors)
 builder.Services.AddApplicationServices();
@@ -44,6 +46,21 @@ builder.Services.AddAuthentication(options =>
         ValidAudience            = jwtSettings["Audience"],
         IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
     };
+    
+    // Configure JWT authentication for SignalR WebSockets
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
@@ -54,7 +71,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 // ─────────────────────────────────────────────
@@ -86,6 +104,7 @@ app.UseAuthorization();
 app.UseHangfireDashboard();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Health check endpoint
 app.MapGet("/health", async (ApplicationDbContext db) =>

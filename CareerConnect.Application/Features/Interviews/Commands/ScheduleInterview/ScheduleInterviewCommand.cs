@@ -24,6 +24,7 @@ public class ScheduleInterviewCommandHandler : IRequestHandler<ScheduleInterview
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     public ScheduleInterviewCommandHandler(
         IApplicationRepository applicationRepository,
@@ -31,7 +32,8 @@ public class ScheduleInterviewCommandHandler : IRequestHandler<ScheduleInterview
         IInterviewRepository interviewRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        IEmailService emailService)
+        IEmailService emailService,
+        INotificationService notificationService)
     {
         _applicationRepository = applicationRepository;
         _companyRepository     = companyRepository;
@@ -39,6 +41,7 @@ public class ScheduleInterviewCommandHandler : IRequestHandler<ScheduleInterview
         _userRepository        = userRepository;
         _unitOfWork            = unitOfWork;
         _emailService          = emailService;
+        _notificationService   = notificationService;
     }
 
     public async Task<Guid> Handle(ScheduleInterviewCommand request, CancellationToken cancellationToken)
@@ -94,6 +97,8 @@ public class ScheduleInterviewCommandHandler : IRequestHandler<ScheduleInterview
                     <p>Log in to your dashboard to view more details.</p>
                 ";
                 await _emailService.SendEmailAsync(candidate.Email, subject, body, cancellationToken);
+                
+                await _notificationService.SendNotificationAsync(candidate.Id.ToString(), $"You have an interview scheduled for {jobTitle} at {company.Name} on {request.ScheduledAt.ToString("f")}", "Info");
             }
         }
 

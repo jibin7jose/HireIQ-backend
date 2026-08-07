@@ -16,13 +16,15 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJobScheduler _jobScheduler;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
     public ApplyToJobCommandHandler(
         IApplicationRepository applicationRepository,
         IJobRepository jobRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
         IJobScheduler jobScheduler,
-        IEmailService emailService)
+        IEmailService emailService,
+        INotificationService notificationService)
     {
         _applicationRepository = applicationRepository;
         _jobRepository         = jobRepository;
@@ -30,6 +32,7 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
         _unitOfWork            = unitOfWork;
         _jobScheduler          = jobScheduler;
         _emailService          = emailService;
+        _notificationService   = notificationService;
     }
 
     public async Task<ApplicationDto> Handle(ApplyToJobCommand request, CancellationToken cancellationToken)
@@ -84,6 +87,8 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
                     <p>Log in to your employer dashboard to review their resume and AI Match Score.</p>
                 ";
                 await _emailService.SendEmailAsync(employer.Email, subject, body, cancellationToken);
+                
+                await _notificationService.SendNotificationAsync(employer.Id.ToString(), $"New application received for {job.Title} from {profile.FullName}", "Info");
             }
         }
 

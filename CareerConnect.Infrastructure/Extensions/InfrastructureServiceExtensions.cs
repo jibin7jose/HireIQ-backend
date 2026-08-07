@@ -35,6 +35,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddScoped<IStorageService, SupabaseStorageService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<INotificationService, SignalRNotificationService>();
 
         services.AddHttpClient<IGeminiAiService, GeminiAiService>();
 
