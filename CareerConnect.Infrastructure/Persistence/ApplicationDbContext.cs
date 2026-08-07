@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Job> Jobs => Set<Job>();
     public DbSet<JobApplication> Applications => Set<JobApplication>();
     public DbSet<Interview> Interviews => Set<Interview>();
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,5 +61,24 @@ public class ApplicationDbContext : DbContext
             .HasOne(c => c.AdminUser)
             .WithMany()
             .HasForeignKey(c => c.AdminUserId);
+
+        // Configure Message relationships
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.Application)
+            .WithMany() // Assuming Application doesn't necessarily need a collection of Messages
+            .HasForeignKey(m => m.ApplicationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.Sender)
+            .WithMany()
+            .HasForeignKey(m => m.SenderUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.Receiver)
+            .WithMany()
+            .HasForeignKey(m => m.ReceiverUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

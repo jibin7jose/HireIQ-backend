@@ -16,11 +16,16 @@ public class SignalRNotificationService : INotificationService
 
     public async Task SendNotificationAsync(string userId, string message, string type = "Info")
     {
-        await _hubContext.Clients.Group(userId).SendAsync("ReceiveNotification", new 
-        { 
-            Message = message, 
-            Type = type,
-            Timestamp = System.DateTime.UtcNow
+        await _hubContext.Clients.Group(userId).SendAsync("ReceiveNotification", new
+        {
+            message,
+            type,
+            timestamp = System.DateTime.UtcNow
         });
+    }
+
+    public async Task SendChatMessageAsync(string userId, object chatMessage)
+    {
+        await _hubContext.Clients.Group(userId).SendAsync("ReceiveMessage", chatMessage);
     }
 }

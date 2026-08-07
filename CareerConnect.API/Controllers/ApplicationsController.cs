@@ -3,6 +3,7 @@ using CareerConnect.Application.DTOs.Applications;
 using CareerConnect.Application.Features.Applications.Commands.ApplyToJob;
 using CareerConnect.Application.Features.Applications.Commands.UpdateApplicationStatus;
 using CareerConnect.Application.Features.Applications.Queries.GetApplicationsForJob;
+using CareerConnect.Application.Features.Applications.Queries.GetCandidateApplications;
 using CareerConnect.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -41,6 +42,17 @@ public sealed class ApplicationsController : ControllerBase
     public async Task<IActionResult> GetForJob(Guid jobId, [FromQuery] ApplicationStatus? statusFilter, CancellationToken cancellationToken)
     {
         var query = new GetApplicationsForJobQuery(jobId, GetCurrentUserId(), statusFilter);
+        var result = await _mediator.Send(query, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>GET /api/applications/candidate — Candidate only</summary>
+    [HttpGet("candidate")]
+    [Authorize(Roles = "Candidate")]
+    [ProducesResponseType(typeof(IEnumerable<CandidateApplicationDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetForCandidate(CancellationToken cancellationToken)
+    {
+        var query = new GetCandidateApplicationsQuery(GetCurrentUserId());
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

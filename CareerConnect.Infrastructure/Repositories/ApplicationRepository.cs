@@ -49,6 +49,16 @@ public sealed class ApplicationRepository : IApplicationRepository
         => await _context.Applications
             .AnyAsync(a => a.UserProfileId == userProfileId && a.JobId == jobId, cancellationToken);
 
+    public async Task<IEnumerable<JobApplication>> GetByCandidateIdAsync(Guid userProfileId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Applications
+            .Include(a => a.Job)
+            .ThenInclude(j => j!.Company)
+            .Where(a => a.UserProfileId == userProfileId)
+            .OrderByDescending(a => a.AppliedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(JobApplication application, CancellationToken cancellationToken = default)
         => await _context.Applications.AddAsync(application, cancellationToken);
 

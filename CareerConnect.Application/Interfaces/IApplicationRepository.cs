@@ -10,6 +10,7 @@ public interface IApplicationRepository
     Task<IEnumerable<JobApplication>> GetByUserProfileIdAsync(Guid userProfileId, CancellationToken cancellationToken = default);
     Task<int> GetTotalApplicantsByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Guid userProfileId, Guid jobId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<JobApplication>> GetByCandidateIdAsync(Guid userProfileId, CancellationToken cancellationToken = default);
     Task AddAsync(JobApplication application, CancellationToken cancellationToken = default);
     void Update(JobApplication application);
 }
