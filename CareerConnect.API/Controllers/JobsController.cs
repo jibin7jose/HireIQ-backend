@@ -144,6 +144,24 @@ public sealed class JobsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>POST /api/jobs/{id}/invite — Employer only</summary>
+    [HttpPost("{id:guid}/invite")]
+    [Authorize(Roles = "Employer")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> InviteCandidate(Guid id, [FromBody] CareerConnect.Application.DTOs.InviteCandidateRequest request, CancellationToken cancellationToken)
+    {
+        var command = new CareerConnect.Application.Features.Jobs.Commands.InviteCandidate.InviteCandidateCommand(
+            JobId: id,
+            CandidateUserId: request.CandidateUserId,
+            EmployerId: GetCurrentUserId(),
+            AiMatchScore: request.AiMatchScore
+        );
+
+        await _mediator.Send(command, cancellationToken);
+        return Ok(new { message = "Candidate invited successfully." });
+    }
+
     private Guid GetCurrentUserId()
     {
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier)

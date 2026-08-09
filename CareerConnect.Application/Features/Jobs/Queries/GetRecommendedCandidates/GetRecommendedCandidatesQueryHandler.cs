@@ -44,8 +44,7 @@ public class GetRecommendedCandidatesQueryHandler : IRequestHandler<GetRecommend
         var candidates = users.Where(u => 
             u.Role == UserRole.Candidate && 
             u.UserProfile != null && 
-            u.UserProfile.Skills.Any() &&
-            u.UserProfile.ReceiveJobAlerts).ToList();
+            u.UserProfile.Skills.Any()).ToList();
 
         // Get candidates who ALREADY applied
         var appliedUserIds = new HashSet<Guid>();
@@ -85,8 +84,9 @@ public class GetRecommendedCandidatesQueryHandler : IRequestHandler<GetRecommend
                     ));
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error calculating score for candidate {candidate.Id}: {ex.Message}");
                 // Ignore scoring failures for individual candidates
             }
         }

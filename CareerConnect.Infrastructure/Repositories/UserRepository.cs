@@ -28,11 +28,14 @@ public sealed class UserRepository : IUserRepository
         => await _context.Users.AnyAsync(u => u.Email == email, cancellationToken);
 
     public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await _context.Users.ToListAsync(cancellationToken);
+        => await _context.Users.Include(u => u.UserProfile).ToListAsync(cancellationToken);
 
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
         => await _context.Users.AddAsync(user, cancellationToken);
 
     public void Update(User user)
         => _context.Users.Update(user);
+
+    public void Delete(User user)
+        => _context.Users.Remove(user);
 }

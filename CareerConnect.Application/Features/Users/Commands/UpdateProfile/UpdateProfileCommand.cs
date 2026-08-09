@@ -10,7 +10,8 @@ namespace CareerConnect.Application.Features.Users.Commands.UpdateProfile;
 public record UpdateProfileCommand(
     Guid UserId,
     bool ReceiveJobAlerts,
-    string? WalletAddress = null
+    string? WalletAddress = null,
+    string? FullName = null
 ) : IRequest;
 
 public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand>
@@ -37,6 +38,11 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand>
         if (request.WalletAddress != null)
         {
             user.UserProfile.WalletAddress = request.WalletAddress;
+        }
+
+        if (request.FullName != null)
+        {
+            user.UserProfile.FullName = request.FullName;
         }
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -6,5 +6,6 @@ public enum ApplicationStatus
     Reviewed    = 1,
     Shortlisted = 2,
     Rejected    = 3,
-    Hired       = 4
+    Hired       = 4,
+    Invited     = 5
 }

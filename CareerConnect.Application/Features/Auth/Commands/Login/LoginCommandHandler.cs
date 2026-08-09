@@ -21,7 +21,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResp
         // 1. Fetch user
         var user = await _userRepository.GetByEmailAsync(
             request.Email.ToLowerInvariant(), cancellationToken)
-            ?? throw new UnauthorizedException("Invalid email or password.");
+            ?? throw new NotFoundException("Account not found. Please sign up first.");
 
         // 2. Verify password
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))

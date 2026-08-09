@@ -61,7 +61,7 @@ public class UsersController : ControllerBase
         });
     }
 
-    public record UpdateProfileRequest(bool ReceiveJobAlerts, string? WalletAddress = null);
+    public record UpdateProfileRequest(bool ReceiveJobAlerts, string? WalletAddress = null, string? FullName = null);
 
     [HttpPut("me/profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
@@ -70,7 +70,12 @@ public class UsersController : ControllerBase
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return Unauthorized();
 
-        var command = new CareerConnect.Application.Features.Users.Commands.UpdateProfile.UpdateProfileCommand(userId, request.ReceiveJobAlerts, request.WalletAddress);
+        var command = new CareerConnect.Application.Features.Users.Commands.UpdateProfile.UpdateProfileCommand(
+            userId, 
+            request.ReceiveJobAlerts, 
+            request.WalletAddress,
+            request.FullName
+        );
         await _mediator.Send(command);
         return NoContent();
     }
@@ -112,5 +117,35 @@ public class UsersController : ControllerBase
         var publicUrl = await _mediator.Send(command);
 
         return Ok(new { url = publicUrl });
+    }
+
+    [HttpPut("me/password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+
+        var command = new CareerConnect.Application.Features.Users.Commands.ChangePassword.ChangePasswordCommand(
+            userId,
+            request.OldPassword,
+            request.NewPassword
+        );
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+
+        var command = new CareerConnect.Application.Features.Users.Commands.DeleteAccount.DeleteAccountCommand(userId);
+        await _mediator.Send(command);
+        
+        return NoContent();
     }
 }

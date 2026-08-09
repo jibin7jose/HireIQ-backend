@@ -21,3 +21,8 @@ Thumbs.db
 ## Rider / Resharper
 .idea/
 *.DotSettings.user
+
+## Custom
+node_modules/
+CareerConnect.API/wwwroot/resumes/
+check.js
