@@ -28,8 +28,18 @@ public sealed class CreateJobCommandHandler : IRequestHandler<CreateJobCommand, 
 
     public async Task<JobDto> Handle(CreateJobCommand request, CancellationToken cancellationToken)
     {
-        var company = await _companyRepository.GetByIdAsync(request.CompanyId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Company), request.CompanyId);
+        var company = await _companyRepository.GetByIdAsync(request.CompanyId, cancellationToken);
+        if (company == null)
+        {
+            // Auto-create company for old accounts that were missing it
+            company = new Company
+            {
+                Id = request.CompanyId,
+                AdminUserId = request.CompanyId,
+                Name = "Unknown Company"
+            };
+            await _companyRepository.AddAsync(company, cancellationToken);
+        }
 
         var job = new Job
         {

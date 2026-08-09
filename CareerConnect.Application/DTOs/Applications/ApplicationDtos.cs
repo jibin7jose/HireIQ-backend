@@ -17,8 +17,8 @@ public record ApplicationDto(
 
 public record ApplyRequest(
     Guid JobId,
-    string CoverLetter,
-    string ResumeUrl
+    string? CoverLetter,
+    string? ResumeUrl
 );
 
 public record UpdateApplicationStatusRequest(

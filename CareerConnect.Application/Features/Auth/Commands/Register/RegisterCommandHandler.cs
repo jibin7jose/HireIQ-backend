@@ -10,17 +10,20 @@ namespace CareerConnect.Application.Features.Auth.Commands.Register;
 public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResponse>
 {
     private readonly IUserRepository _userRepository;
+    private readonly ICompanyRepository _companyRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITokenService _tokenService;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
+        ICompanyRepository companyRepository,
         IUnitOfWork unitOfWork,
         ITokenService tokenService)
     {
-        _userRepository = userRepository;
-        _unitOfWork     = unitOfWork;
-        _tokenService   = tokenService;
+        _userRepository     = userRepository;
+        _companyRepository  = companyRepository;
+        _unitOfWork         = unitOfWork;
+        _tokenService       = tokenService;
     }
 
     public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -49,6 +52,17 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         };
 
         user.UserProfile = profile;
+
+        if (request.Role == CareerConnect.Domain.Enums.UserRole.Employer)
+        {
+            var company = new Company
+            {
+                Id = user.Id, // Link company ID to User ID for now (1:1 mapping in this architecture)
+                AdminUserId = user.Id,
+                Name = request.FullName
+            };
+            await _companyRepository.AddAsync(company, cancellationToken);
+        }
 
         await _userRepository.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -26,7 +26,7 @@ public class GeminiAiService : IGeminiAiService
             return "{\"Skills\": [], \"ExperienceSummary\": \"\", \"Education\": \"\"}";
         }
 
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={_apiKey}";
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
 
         var prompt = @"
 You are an expert HR AI assistant. Parse the following resume text and extract the candidate's skills, experience summary, and education.
@@ -90,7 +90,7 @@ Resume Text:
             return 50; // Fallback score if no API key
         }
 
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={_apiKey}";
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
 
         var prompt = $@"
 You are an expert HR AI assistant evaluating a candidate against a job description.
@@ -148,7 +148,7 @@ Candidate Experience:
             return scores;
         }
 
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={_apiKey}";
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
 
         var jobsJson = JsonSerializer.Serialize(jobs.Select(j => new { j.Id, j.Title, j.Description }));
 
