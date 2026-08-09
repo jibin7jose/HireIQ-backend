@@ -95,6 +95,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Mes
 
         // Broadcast to receiver via SignalR
         await _notificationService.SendChatMessageAsync(receiverId.ToString(), dto);
+        await _notificationService.SendNotificationAsync(receiverId.ToString(), $"New message from {senderName}", "Info");
 
         return dto;
     }

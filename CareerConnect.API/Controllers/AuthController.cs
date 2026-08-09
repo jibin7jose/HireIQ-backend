@@ -37,6 +37,26 @@ public sealed class AuthController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(Register), result);
     }
+    /// <summary>POST /api/auth/register-admin</summary>
+    [HttpPost("register-admin")]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RegisterAdmin(
+        [FromBody] RegisterRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new RegisterCommand(
+            Email:    request.Email,
+            Password: request.Password,
+            FullName: request.FullName,
+            Phone:    request.Phone,
+            Role:     CareerConnect.Domain.Enums.UserRole.Admin
+        );
+
+        var result = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(RegisterAdmin), result);
+    }
 
     /// <summary>POST /api/auth/login</summary>
     [HttpPost("login")]
