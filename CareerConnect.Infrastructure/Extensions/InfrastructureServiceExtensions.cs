@@ -36,7 +36,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IJobMatchingService, JobMatchingService>();
         services.AddScoped<IJobScheduler, HangfireJobScheduler>();
         services.AddHttpContextAccessor();
-        services.AddScoped<IStorageService, LocalFileStorageService>();
+        services.AddScoped<IStorageService, SupabaseStorageService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationService, SignalRNotificationService>();
 

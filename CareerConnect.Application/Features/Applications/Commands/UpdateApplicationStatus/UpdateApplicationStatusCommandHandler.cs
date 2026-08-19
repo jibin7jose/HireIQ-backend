@@ -13,7 +13,7 @@ public sealed class UpdateApplicationStatusCommandHandler
     private readonly ICompanyRepository _companyRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IEmailService _emailService;
+    private readonly IJobScheduler _jobScheduler;
     private readonly INotificationService _notificationService;
 
     public UpdateApplicationStatusCommandHandler(
@@ -21,14 +21,14 @@ public sealed class UpdateApplicationStatusCommandHandler
         ICompanyRepository companyRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        IEmailService emailService,
+        IJobScheduler jobScheduler,
         INotificationService notificationService)
     {
         _applicationRepository = applicationRepository;
         _companyRepository     = companyRepository;
         _userRepository        = userRepository;
         _unitOfWork            = unitOfWork;
-        _emailService          = emailService;
+        _jobScheduler          = jobScheduler;
         _notificationService   = notificationService;
     }
 
@@ -68,7 +68,7 @@ public sealed class UpdateApplicationStatusCommandHandler
                     <p>Your new status is: <strong>{newStatus.ToString()}</strong>.</p>
                     <p>Log in to your candidate dashboard to view more details.</p>
                 ";
-                await _emailService.SendEmailAsync(candidate.Email, subject, body, cancellationToken);
+                _jobScheduler.ScheduleEmail(candidate.Email, subject, body);
                 
                 await _notificationService.SendNotificationAsync(candidate.Id.ToString(), $"Your application for {jobTitle} at {companyName} is now: {newStatus}", "Info");
             }

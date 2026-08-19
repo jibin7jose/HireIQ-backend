@@ -26,4 +26,9 @@ public class HangfireJobScheduler : IJobScheduler
             x => x.RunDailyJobAlertsAsync(default),
             Cron.Daily(9, 0)); // Run every day at 9 AM
     }
+
+    public void ScheduleEmail(string to, string subject, string body)
+    {
+        _backgroundJobClient.Enqueue<IEmailService>(x => x.SendEmailAsync(to, subject, body, default));
+    }
 }
