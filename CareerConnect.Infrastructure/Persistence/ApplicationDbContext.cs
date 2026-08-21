@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<JobApplication> Applications => Set<JobApplication>();
     public DbSet<Interview> Interviews => Set<Interview>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,5 +81,12 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(m => m.ReceiverUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Notification -> User
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany() // Or User.Notifications if we add it
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

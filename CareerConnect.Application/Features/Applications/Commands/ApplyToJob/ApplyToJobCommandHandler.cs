@@ -17,6 +17,7 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
     private readonly IJobScheduler _jobScheduler;
     private readonly IEmailService _emailService;
     private readonly INotificationService _notificationService;
+    private readonly INotificationRepository _notificationRepository;
     public ApplyToJobCommandHandler(
         IApplicationRepository applicationRepository,
         IJobRepository jobRepository,
@@ -24,7 +25,8 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
         IUnitOfWork unitOfWork,
         IJobScheduler jobScheduler,
         IEmailService emailService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        INotificationRepository notificationRepository)
     {
         _applicationRepository = applicationRepository;
         _jobRepository         = jobRepository;
@@ -33,6 +35,7 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
         _jobScheduler          = jobScheduler;
         _emailService          = emailService;
         _notificationService   = notificationService;
+        _notificationRepository = notificationRepository;
     }
 
     public async Task<ApplicationDto> Handle(ApplyToJobCommand request, CancellationToken cancellationToken)
@@ -88,9 +91,27 @@ public sealed class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand
                 ";
                 await _emailService.SendEmailAsync(employer.Email, subject, body, cancellationToken);
                 
-                await _notificationService.SendNotificationAsync(employer.Id.ToString(), $"New application received for {job.Title} from {profile.FullName}", "Info");
+                var message = $"New application received for {job.Title} from {profile.FullName}";
+                var type = "Info";
+
+                // Persist notification to DB
+                var notification = new CareerConnect.Domain.Entities.Notification
+                {
+                    UserId = employer.Id,
+                    Message = message,
+                    Type = type,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                await _notificationRepository.AddAsync(notification, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // Trigger SignalR
+                await _notificationService.SendNotificationAsync(employer.Id.ToString(), message, type);
             }
         }
+
 
         return new ApplicationDto(
             Id:            application.Id,

@@ -28,6 +28,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
         services.AddScoped<IInterviewRepository,   InterviewRepository>();
         services.AddScoped<IMessageRepository,     MessageRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUnitOfWork,            UnitOfWork>();
 
         // Services
