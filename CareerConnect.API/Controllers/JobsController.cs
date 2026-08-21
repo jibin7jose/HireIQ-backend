@@ -41,6 +41,30 @@ public sealed class JobsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>GET /api/jobs/semantic-search?query=...</summary>
+    [HttpGet("semantic-search")]
+    [ProducesResponseType(typeof(PagedResult<JobDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SemanticSearch(
+        [FromQuery] string query,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new CareerConnect.Application.Features.Jobs.Queries.SemanticJobSearch.SemanticJobSearchQuery(query, pageNumber, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>POST /api/jobs/{id}/ai-cover-letter — Candidate only</summary>
+    [HttpPost("{id:guid}/ai-cover-letter")]
+    [Authorize(Roles = "Candidate")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GenerateCoverLetter(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new CareerConnect.Application.Features.Jobs.Queries.GenerateCoverLetter.GenerateCoverLetterQuery(id, GetCurrentUserId()), cancellationToken);
+        return Ok(new { coverLetter = result });
+    }
+
+
     /// <summary>GET /api/jobs/{id}</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(JobDto), StatusCodes.Status200OK)]

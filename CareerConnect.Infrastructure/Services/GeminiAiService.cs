@@ -298,4 +298,131 @@ Jobs:
 
         return scores;
     }
+
+    public async Task<string> GenerateCoverLetterAsync(string candidateProfile, string jobDescription, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+        {
+            return "Dear Hiring Manager,\n\nI am writing to express my interest in this position. Based on my background and skills, I believe I am a strong candidate for this role. I look forward to discussing my qualifications with you in more detail.\n\nSincerely,\nCandidate";
+        }
+
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={_apiKey}";
+
+        var prompt = $@"
+You are an expert career coach helping a candidate write a customized, professional cover letter.
+Write a 3-paragraph cover letter for the candidate applying to the job described below. 
+Do not include placeholders like [Your Name] or [Company Name] if they are missing, just write naturally. 
+Return ONLY the raw text of the cover letter. Do not include markdown formatting like ```text or markdown blocks.
+
+Candidate Profile:
+{candidateProfile}
+
+Job Description:
+{jobDescription}
+";
+
+        var requestBody = new
+        {
+            contents = new[] { new { parts = new[] { new { text = prompt } } } },
+            generationConfig = new { temperature = 0.6 }
+        };
+
+        try 
+        {
+            var response = await _httpClient.PostAsJsonAsync(url, requestBody, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                using var document = JsonDocument.Parse(responseContent);
+                var root = document.RootElement;
+                
+                if (root.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0)
+                {
+                    var firstCandidate = candidates[0];
+                    if (firstCandidate.TryGetProperty("content", out var content) && 
+                        content.TryGetProperty("parts", out var parts) && 
+                        parts.GetArrayLength() > 0)
+                    {
+                        var text = parts[0].GetProperty("text").GetString()?.Trim();
+                        return text ?? "Unable to generate cover letter.";
+                    }
+                }
+            }
+        }
+        catch 
+        {
+            // Fallback
+        }
+
+        return "Dear Hiring Manager,\n\nI am writing to express my interest in this position. Based on my background and skills, I believe I am a strong candidate for this role. I look forward to discussing my qualifications with you in more detail.\n\nSincerely,\nCandidate";
+    }
+
+    public async Task<CareerConnect.Application.DTOs.Jobs.SemanticSearchParams> ExtractSearchParametersAsync(string semanticQuery, CancellationToken cancellationToken = default)
+    {
+        var defaultParams = new CareerConnect.Application.DTOs.Jobs.SemanticSearchParams { Keyword = semanticQuery };
+        if (string.IsNullOrEmpty(_apiKey))
+        {
+            return defaultParams;
+        }
+
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={_apiKey}";
+
+        var prompt = $@"
+You are a semantic search extraction engine for a job portal.
+Extract structured search parameters from the following natural language query.
+Return ONLY a raw JSON object with this exact schema:
+{{
+  ""Keyword"": ""Core job title or primary skill (e.g., Frontend, React, Software Engineer) or null if none"",
+  ""Location"": ""City, State, or 'Remote' if they want remote work, or null"",
+  ""JobType"": ""'Full-Time', 'Part-Time', 'Contract', 'Remote', or null"",
+  ""MinSalary"": integer representing minimum salary in USD if mentioned, or null,
+  ""Summary"": ""A 1 sentence positive affirmation of what we are searching for (e.g., 'Searching for remote frontend roles paying over $90k.')""
+}}
+
+Query:
+{semanticQuery}
+";
+
+        var requestBody = new
+        {
+            contents = new[] { new { parts = new[] { new { text = prompt } } } },
+            generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
+        };
+
+        try 
+        {
+            var response = await _httpClient.PostAsJsonAsync(url, requestBody, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                using var document = JsonDocument.Parse(responseContent);
+                var root = document.RootElement;
+                
+                if (root.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0)
+                {
+                    var firstCandidate = candidates[0];
+                    if (firstCandidate.TryGetProperty("content", out var content) && 
+                        content.TryGetProperty("parts", out var parts) && 
+                        parts.GetArrayLength() > 0)
+                    {
+                        var text = parts[0].GetProperty("text").GetString()?.Trim();
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            var parsed = JsonSerializer.Deserialize<CareerConnect.Application.DTOs.Jobs.SemanticSearchParams>(text);
+                            if (parsed != null)
+                            {
+                                return parsed;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch 
+        {
+            // Fallback
+        }
+
+        return defaultParams;
+    }
 }
