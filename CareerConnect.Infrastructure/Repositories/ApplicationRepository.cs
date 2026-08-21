@@ -48,6 +48,30 @@ public sealed class ApplicationRepository : IApplicationRepository
             .Where(a => a.Job != null && a.Job.CompanyId == companyId)
             .CountAsync(cancellationToken);
 
+    public async Task<int> GetAverageAiMatchScoreByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken = default)
+    {
+        var scores = await _context.Applications
+            .Include(a => a.Job)
+            .Where(a => a.Job != null && a.Job.CompanyId == companyId && a.AiMatchScore > 0)
+            .Select(a => a.AiMatchScore)
+            .ToListAsync(cancellationToken);
+
+        if (!scores.Any()) return 0;
+        return (int)scores.Average();
+    }
+
+    public async Task<IEnumerable<JobApplication>> GetTopCandidatesByCompanyIdAsync(Guid companyId, int count, CancellationToken cancellationToken = default)
+    {
+        return await _context.Applications
+            .Include(a => a.Job)
+            .Include(a => a.UserProfile)
+                .ThenInclude(up => up!.User)
+            .Where(a => a.Job != null && a.Job.CompanyId == companyId && a.AiMatchScore > 0 && a.Status == CareerConnect.Domain.Enums.ApplicationStatus.Pending)
+            .OrderByDescending(a => a.AiMatchScore)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsAsync(Guid userProfileId, Guid jobId, CancellationToken cancellationToken = default)
         => await _context.Applications
             .AnyAsync(a => a.UserProfileId == userProfileId && a.JobId == jobId, cancellationToken);
