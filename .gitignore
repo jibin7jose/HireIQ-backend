@@ -1,0 +1,28 @@
+## Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## EF Migrations (keep the files, ignore the snapshots if you prefer)
+# CareerConnect.Infrastructure/Migrations/
+
+## Secrets — NEVER commit these
+appsettings.Development.json
+appsettings.Production.json
+*.env
+.env
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Rider / Resharper
+.idea/
+*.DotSettings.user
+
+## Custom
+node_modules/
+CareerConnect.API/wwwroot/resumes/
+check.js

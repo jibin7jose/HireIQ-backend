@@ -1,0 +1,11 @@
+namespace CareerConnect.Domain.Enums;
+
+public enum ApplicationStatus
+{
+    Pending     = 0,
+    Reviewed    = 1,
+    Shortlisted = 2,
+    Rejected    = 3,
+    Hired       = 4,
+    Invited     = 5
+}
