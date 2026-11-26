@@ -4,6 +4,7 @@ using CareerConnect.API.Middlewares;
 using CareerConnect.Application.Extensions;
 using CareerConnect.Infrastructure.Extensions;
 using CareerConnect.Infrastructure.Persistence;
+using CareerConnect.API.Seeding;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +97,7 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
+    await DevelopmentDataSeeder.SeedAsync(db);
     
     // Register recurring Hangfire jobs
     var jobScheduler = scope.ServiceProvider.GetRequiredService<CareerConnect.Application.Interfaces.IJobScheduler>();
